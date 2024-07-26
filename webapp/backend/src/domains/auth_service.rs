@@ -164,31 +164,25 @@ impl<T: AuthRepository + std::fmt::Debug> AuthService<T> {
             Err(_) => return Err(AppError::NotFound),
         };
 
-        let path: PathBuf =
-            Path::new(&format!("images/user_profile/{}", profile_image_name)).to_path_buf();
+        let resized_image_path: PathBuf =
+            Path::new(&format!("images/user_profile/resized_{}", profile_image_name)).to_path_buf();
 
-        let output = Command::new("magick")
-            .arg(&path)
-            .arg("-resize")
-            .arg("500x500")
-            .arg("png:-")
-            .output()
-            .map_err(|e| {
-                error!("画像リサイズのコマンド実行に失敗しました: {:?}", e);
-                AppError::InternalServerError
-            })?;
-
-        match output.status.success() {
-            true => Ok(Bytes::from(output.stdout)),
-            false => {
-                error!(
-                    "画像リサイズのコマンド実行に失敗しました: {:?}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-                Err(AppError::InternalServerError)
-            }
+        // リサイズ済みの画像が存在するか確認
+        if resized_image_path.exists() {
+            // リサイズ済みの画像を読み込み、Bytesに変換して返す
+            let mut file = tokio::fs::File::open(resized_image_path)
+                .await
+                .map_err(|_| AppError::InternalServerError)?;
+            let mut buf = Vec::new();
+            file.read_to_end(&mut buf)
+                .await
+                .map_err(|_| AppError::InternalServerError)?;
+            return Ok(Bytes::from(buf));
         }
+
+        Err(AppError::NotFound)
     }
+
 
     pub async fn validate_session(&self, session_token: &str) -> Result<bool, AppError> {
         let session = self

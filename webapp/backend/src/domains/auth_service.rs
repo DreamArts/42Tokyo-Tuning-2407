@@ -153,7 +153,12 @@ impl<T: AuthRepository + std::fmt::Debug> AuthService<T> {
         Ok(())
     }
 
-    pub async fn get_resized_profile_image_byte(&self, user_id: i32) -> Result<Bytes, AppError> {
+    pub async fn get_resized_profile_image_byte(
+        &self,
+        user_id: i32,
+        width: u32,
+        height: u32,
+    ) -> Result<Bytes, AppError> {
         let profile_image_name = match self
             .repository
             .find_profile_image_name_by_user_id(user_id)
@@ -167,10 +172,11 @@ impl<T: AuthRepository + std::fmt::Debug> AuthService<T> {
         let path: PathBuf =
             Path::new(&format!("images/user_profile/{}", profile_image_name)).to_path_buf();
 
+        let resize_arg = format!("{}x{}", width, height);
         let output = Command::new("magick")
             .arg(&path)
             .arg("-resize")
-            .arg("500x500")
+            .arg(&resize_arg)
             .arg("png:-")
             .output()
             .map_err(|e| {

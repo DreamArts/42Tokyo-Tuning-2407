@@ -41,8 +41,12 @@ pub async fn user_profile_image_handler(
     service: web::Data<AuthService<AuthRepositoryImpl>>,
     path: web::Path<i32>,
 ) -> Result<HttpResponse, AppError> {
+    let width = 500;
+    let height = 500;
     let user_id = path.into_inner();
-    let profile_image_byte = service.get_resized_profile_image_byte(user_id).await?;
+    let profile_image_byte = service
+        .get_resized_profile_image_byte(user_id, width, height)
+        .await?;
     Ok(HttpResponse::Ok()
         .content_type("image/png")
         .body(profile_image_byte))

@@ -17,7 +17,7 @@ const Login: NextPage = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const data = await 	(username, password);
+      const data = await login(username, password);
       setUserInfo(data);
       router.push("/");
     } catch {

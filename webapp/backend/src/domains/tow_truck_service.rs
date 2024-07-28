@@ -5,6 +5,9 @@ use crate::errors::AppError;
 use crate::models::graph::Graph;
 use crate::models::tow_truck::TowTruck;
 
+use rayon::prelude::*;
+use std::sync::Mutex;
+
 pub trait TowTruckRepository {
     async fn get_paginated_tow_trucks(
         &self,
@@ -89,36 +92,45 @@ impl<
             .get_paginated_tow_trucks(0, -1, Some("available".to_string()), Some(area_id))
             .await?;
 
-        let nodes = self.map_repository.get_all_nodes(Some(area_id)).await?;
-        let edges = self.map_repository.get_all_edges(Some(area_id)).await?;
+        let (nodes, edges) = tokio::try_join!(
+            self.map_repository.get_all_nodes(Some(area_id)),
+            self.map_repository.get_all_edges(Some(area_id))
+        )?;
 
         let mut graph = Graph::new();
-        for node in nodes {
-            graph.add_node(node);
-        }
-        for edge in edges {
-            graph.add_edge(edge);
-        }
 
-        let sorted_tow_trucks_by_distance = {
-            let mut tow_trucks_with_distance: Vec<_> = tow_trucks
-                .into_iter()
-                .map(|truck| {
-                    let distance = calculate_distance(&graph, truck.node_id, order.node_id);
-                    (distance, truck)
-                })
-                .collect();
-
-            tow_trucks_with_distance.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-            tow_trucks_with_distance
-        };
-
-        if sorted_tow_trucks_by_distance.is_empty() || sorted_tow_trucks_by_distance[0].0 > 10000000
+        // NodeとEdgeの追加を並列で行う
         {
+            let graph_mutex = Mutex::new(&mut graph);
+
+            nodes.par_iter().for_each(|node| {
+                let mut graph = graph_mutex.lock().unwrap();
+                graph.add_node(node.clone());
+            });
+
+            edges.par_iter().for_each(|edge| {
+                let mut graph = graph_mutex.lock().unwrap();
+                graph.add_edge(edge.clone());
+            });
+        }
+
+        // 距離計算とソートを並列で行う
+        let mut tow_trucks_with_distance: Vec<_> = tow_trucks
+            .into_par_iter()
+            .map(|truck| {
+                let distance = calculate_distance(&graph, truck.node_id, order.node_id);
+                (distance, truck)
+            })
+            .collect();
+
+        // 並列ソート
+        tow_trucks_with_distance.par_sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+        if tow_trucks_with_distance.is_empty() || tow_trucks_with_distance[0].0 > 10_000_000 {
             return Ok(None);
         }
 
-        let sorted_tow_truck_dtos: Vec<TowTruckDto> = sorted_tow_trucks_by_distance
+        let sorted_tow_truck_dtos: Vec<TowTruckDto> = tow_trucks_with_distance
             .into_iter()
             .map(|(_, truck)| TowTruckDto::from_entity(truck))
             .collect();

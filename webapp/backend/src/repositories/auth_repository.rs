@@ -25,7 +25,7 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn find_user_by_username(&self, username: &str) -> Result<Option<User>, AppError> {
-        let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
+        let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE MATCH(username) AGAINST (? IN BOOLEAN MODE)")
             .bind(username)
             .fetch_optional(&self.pool)
             .await?;
@@ -46,12 +46,11 @@ impl AuthRepository for AuthRepositoryImpl {
     }
 
     async fn authenticate_user(&self, username: &str, password: &str) -> Result<User, AppError> {
-        let user =
-            sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ? AND password = ?")
-                .bind(username)
-                .bind(password)
-                .fetch_one(&self.pool)
-                .await?;
+        let user = sqlx::query_as::<_, User>("SELECT id, username, password FROM users WHERE MATCH(username) AGAINST (? IN BOOLEAN MODE)")
+            .bind(username)
+            .bind(password)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(user)
     }
@@ -95,11 +94,10 @@ impl AuthRepository for AuthRepositoryImpl {
         &self,
         session_token: &str,
     ) -> Result<Session, AppError> {
-        let session =
-            sqlx::query_as::<_, Session>("SELECT * FROM sessions WHERE session_token = ?")
-                .bind(session_token)
-                .fetch_one(&self.pool)
-                .await?;
+        let session = sqlx::query_as::<_, Session>("SELECT * FROM sessions WHERE MATCH(session_token) AGAINST (? IN BOOLEAN MODE)")
+            .bind(session_token)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(session)
     }
@@ -117,11 +115,10 @@ impl AuthRepository for AuthRepositoryImpl {
         &self,
         user_id: i32,
     ) -> Result<Option<Dispatcher>, AppError> {
-        let dispatcher =
-            sqlx::query_as::<_, Dispatcher>("SELECT * FROM dispatchers WHERE user_id = ?")
-                .bind(user_id)
-                .fetch_optional(&self.pool)
-                .await?;
+        let dispatcher = sqlx::query_as::<_, Dispatcher>("SELECT * FROM dispatchers WHERE user_id = ?")
+            .bind(user_id)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(dispatcher)
     }

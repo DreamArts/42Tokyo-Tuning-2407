@@ -29,23 +29,23 @@ where
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
-    type Transform = AuthMiddlewareMiddleware<S>;
+    type Transform = AuthMiddlewareService<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(AuthMiddlewareMiddleware {
+        ready(Ok(AuthMiddlewareService {
             service,
             auth_service: self.auth_service.clone(),
         }))
     }
 }
 
-pub struct AuthMiddlewareMiddleware<S> {
+pub struct AuthMiddlewareService<S> {
     service: S,
     auth_service: Arc<AuthService<AuthRepositoryImpl>>,
 }
 
-impl<S, B> Service<ServiceRequest> for AuthMiddlewareMiddleware<S>
+impl<S, B> Service<ServiceRequest> for AuthMiddlewareService<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: 'static,
@@ -62,24 +62,18 @@ where
             .get("Authorization")
             .and_then(|h| h.to_str().ok())
             .map(|s| s.to_string());
-        let auth_header = Arc::new(auth_header);
 
         let auth_service = self.auth_service.clone();
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let is_valid_token = match &*auth_header {
-                Some(token) => auth_service.validate_session(token).await.is_ok(),
-                None => false,
-            };
-
-            if is_valid_token {
-                fut.await
-            } else {
-                Err(actix_web::error::ErrorUnauthorized(
-                    "Invalid or missing token",
-                ))
+            if let Some(token) = auth_header {
+                if auth_service.validate_session(&token).await.is_ok() {
+                    return fut.await;
+                }
             }
+
+            Err(actix_web::error::ErrorUnauthorized("Invalid or missing token"))
         })
     }
 }

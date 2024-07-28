@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS completed_orders (
 -- CSVファイルからデータをロード
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/areas.csv'
 INTO TABLE areas
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -91,7 +91,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/users.csv'
 INTO TABLE users
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -99,7 +99,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/dispatchers.csv'
 INTO TABLE dispatchers
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -107,7 +107,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/tow_trucks.csv'
 INTO TABLE tow_trucks
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -115,7 +115,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/nodes.csv'
 INTO TABLE nodes
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -123,7 +123,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/edges.csv'
 INTO TABLE edges
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -131,7 +131,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/locations.csv'
 INTO TABLE locations
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -139,7 +139,7 @@ IGNORE 1 ROWS
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/orders.csv'
 INTO TABLE orders
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
@@ -151,7 +151,7 @@ SET
 
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/csv/completed_orders.csv'
 INTO TABLE completed_orders
-FIELDS TERMINATED BY ',' 
+FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS

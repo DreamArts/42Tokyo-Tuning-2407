@@ -1,14 +1,13 @@
-use std::path::{Path, PathBuf};
-use std::process::Command;
-
-use actix_web::web::Bytes;
-use log::error;
-
+use super::dto::auth::LoginResponseDto;
 use crate::errors::AppError;
 use crate::models::user::{Dispatcher, Session, User};
 use crate::utils::{generate_session_token, hash_password, verify_password};
-
-use super::dto::auth::LoginResponseDto;
+use actix_web::web::Bytes;
+use log::error;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 pub trait AuthRepository {
     async fn create_user(&self, username: &str, password: &str, role: &str)
